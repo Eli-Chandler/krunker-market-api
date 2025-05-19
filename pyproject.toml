@@ -1,0 +1,26 @@
+[project]
+name = "krunker-market-api"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Eli", email = "53414320+Eli-Chandler@users.noreply.github.com" }
+]
+requires-python = ">=3.9"
+dependencies = [
+    "altcha-solver",
+    "msgpack>=1.1.0",
+    "pydantic>=2.11.4",
+    "pytest>=8.3.5",
+    "pytest-asyncio>=0.26.0",
+]
+
+[project.scripts]
+krunker-market-api = "krunker_market_api:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv.sources]
+altcha-solver = { git = "https://github.com/Eli-Chandler/altcha-solver.git" }
