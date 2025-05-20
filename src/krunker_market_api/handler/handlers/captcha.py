@@ -1,4 +1,4 @@
-from krunker_market_api.handlers.protocol import _KrunkerMessageHandler
+from krunker_market_api.handler.protocol import _KrunkerMessageHandlerProtocol
 from krunker_market_api.models import KrunkerMessage
 from altcha_solver import solve_challenge_async
 from typing import Callable, Awaitable
@@ -10,15 +10,15 @@ import logging
 from krunker_market_api.models.krunker_captcha import KrunkerCaptchaSolution, KrunkerCaptcha
 
 
-class _CaptchaHandler(_KrunkerMessageHandler):
+class _CaptchaHandler(_KrunkerMessageHandlerProtocol):
     CAPTCHA_MESSAGE_TYPE = 'cpt'
 
     def __init__(self,
                  send_message: Callable[[KrunkerMessage], Awaitable[None]],
-                 solve_captcha: Callable[[KrunkerCaptcha], Awaitable[KrunkerCaptchaSolution]]
+                 custom_solve_captcha: Callable[[KrunkerCaptcha], Awaitable[KrunkerCaptchaSolution]] = None
                  ):
         self._send_message = send_message
-        self._solve_captcha = solve_captcha
+        self._solve_captcha = custom_solve_captcha if custom_solve_captcha is not None else solve_challenge_async
 
     async def can_handle_receive(self, message: KrunkerMessage) -> bool:
         return message.message_type == self.CAPTCHA_MESSAGE_TYPE

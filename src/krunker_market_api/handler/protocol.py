@@ -1,7 +1,7 @@
 from typing import Protocol
 from krunker_market_api.models import KrunkerMessage
 
-class _KrunkerMessageHandler(Protocol):
+class _KrunkerMessageHandlerProtocol(Protocol):
     async def can_handle_receive(self, message: KrunkerMessage) -> bool:
         """Check if the handler can process the given message."""
         raise NotImplementedError("Subclasses must implement this method.")

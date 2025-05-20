@@ -1,4 +1,4 @@
-from krunker_market_api.handlers.captcha import _CaptchaHandler, solve_captcha
+from krunker_market_api.handler.captcha import _CaptchaHandler, solve_captcha
 from krunker_market_api.models import KrunkerMessage
 import pytest
 from krunker_market_api.models.krunker_captcha import KrunkerCaptcha, KrunkerCaptchaSolution
