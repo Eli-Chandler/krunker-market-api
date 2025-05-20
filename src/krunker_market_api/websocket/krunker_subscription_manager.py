@@ -4,7 +4,7 @@ from typing import Optional, List, TypeVar
 from dataclasses import dataclass
 import asyncio
 
-from krunker_market_api.models.messages.krunker_message import KrunkerMessage
+from krunker_market_api.models.krunker_message import KrunkerMessage
 from krunker_market_api.websocket.krunker_websocket import KrunkerWebSocket
 from typing import Type
 

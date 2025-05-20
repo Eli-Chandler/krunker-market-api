@@ -3,10 +3,10 @@ from collections import deque
 
 from krunker_market_api.websocket.krunker_subscription_manager import KrunkerSubscriptionManager
 from krunker_market_api.websocket.krunker_websocket import KrunkerWebSocket
-from krunker_market_api.models.krunker_captcha import solve_captcha
-from krunker_market_api.models.messages.user import *
-from krunker_market_api.models.messages.captcha import *
-from krunker_market_api.models.messages.ping import *
+from krunker_market_api.models.captcha import *
+from krunker_market_api.models.user import *
+from krunker_market_api.models.item import *
+from krunker_market_api.models.ping import *
 
 
 class KrunkerApi:
@@ -41,6 +41,26 @@ class KrunkerApi:
             lambda msg: msg.message_type == "a" and msg.data[0] == 0,
             timeout=10
         )
+
+    async def get_item_market_info(self, item_id: int) -> ItemMarketInfo:
+        result = await self._sub.send_subscribe(
+            ClientItemMarketInfoMessage(item_id),
+            lambda msg: msg.message_type == '0' and msg.data[0] == 'itemsales' and msg.data[1] == 'market',
+            timeout=10,
+            response_type=ServerItemMarketInfoMessage
+        )
+
+        return ItemMarketInfo.from_krunker_message(result)
+
+    async def get_item_sales_history(self, item_id: int) -> List[ItemSalesDay]:
+        result = await self._sub.send_subscribe(
+            ClientItemSalesHistoryMessage(item_id),
+            lambda msg: msg.message_type == 'gd' and msg.data[1] == item_id,
+            timeout=15,
+            response_type=ServerItemSalesHistoryMessage
+        )
+
+        return ItemSalesDay.from_krunker_message(result)
 
     def ping(self) -> float:
         """Returns the average ping in ms."""

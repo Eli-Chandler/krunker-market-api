@@ -1,5 +1,5 @@
-from krunker_market_api.models.krunker_captcha import KrunkerCaptcha
-from krunker_market_api.models.messages.krunker_message import KrunkerMessage
+from krunker_market_api.models.captcha import KrunkerCaptcha
+from krunker_market_api.models.krunker_message import KrunkerMessage
 
 
 class ClientLoginCaptchaMessage(KrunkerMessage):

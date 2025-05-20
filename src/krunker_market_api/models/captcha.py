@@ -1,11 +1,27 @@
 import base64
 import json
 import logging
+import time
 
 from altcha_solver import solve_challenge_async
 from pydantic import BaseModel
-import time
-from krunker_market_api.models.messages.krunker_message import KrunkerMessage
+
+from krunker_market_api.models.krunker_message import KrunkerMessage
+
+
+class ServerCaptchaMessage(KrunkerMessage):
+    @property
+    def captcha(self) -> 'KrunkerCaptcha':
+        return KrunkerCaptcha(**self.data[0])
+
+class ClientCaptchaSolutionMessage(KrunkerMessage):
+    def __init__(self, solution: str):
+        super().__init__('cptR', [solution])
+
+class ServerCaptchaResultMessage(KrunkerMessage):
+    @property
+    def success(self) -> bool:
+        return self.data[0]
 
 
 class KrunkerCaptcha(BaseModel):

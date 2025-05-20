@@ -4,9 +4,9 @@ import msgpack
 
 class KrunkerMessage:
     message_type: str | int
-    data: List[str | int | dict | bool | None] | None
+    data: List[str | int | dict | bool | None | list] | None
 
-    def __init__(self, message_type: str | int, data: List[str | int | dict | bool | None] | None = None):
+    def __init__(self, message_type: str | int, data: List[str | int | dict | bool | None | list] | None = None):
         if data is None:
             data = []
 

@@ -6,7 +6,7 @@ from typing import AsyncIterator, Optional
 import websockets
 from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError
 
-from krunker_market_api.models.messages.krunker_message import KrunkerMessage
+from krunker_market_api.models.krunker_message import KrunkerMessage
 
 
 class KrunkerWebSocket:

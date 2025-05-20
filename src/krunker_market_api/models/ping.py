@@ -1,4 +1,4 @@
-from krunker_market_api.models.messages.krunker_message import KrunkerMessage
+from krunker_market_api.models.krunker_message import KrunkerMessage
 
 
 class ClientPongMessage(KrunkerMessage):
