@@ -14,9 +14,11 @@ class ServerCaptchaMessage(KrunkerMessage):
     def captcha(self) -> 'KrunkerCaptcha':
         return KrunkerCaptcha(**self.data[0])
 
+
 class ClientCaptchaSolutionMessage(KrunkerMessage):
     def __init__(self, solution: str):
         super().__init__('cptR', [solution])
+
 
 class ServerCaptchaResultMessage(KrunkerMessage):
     @property

@@ -4,6 +4,7 @@ from typing import List
 from krunker_market_api.models.krunker_message import KrunkerMessage
 from dataclasses import dataclass
 
+
 class ClientItemMarketInfoMessage(KrunkerMessage):
     def __init__(self, item_id: int):
         super().__init__(
@@ -16,25 +17,31 @@ class ClientItemMarketInfoMessage(KrunkerMessage):
                 None,
                 0,
                 item_id
-                ]
+            ]
         )
+
 
 class ServerItemMarketInfoMessage(KrunkerMessage):
     @property
     def item_id(self) -> str:
         return self.data[2]['ind']
+
     @property
     def high_price(self) -> int:
         return self.data[2]['high']
+
     @property
     def low_price(self) -> int:
         return self.data[2]['low']
+
     @property
     def in_circulation(self) -> int:
         return self.data[2]['inC']
+
     @property
     def on_sale(self) -> int:
         return self.data[2]['onS']
+
 
 class ClientItemSalesHistoryMessage(KrunkerMessage):
     def __init__(self, item_id: int):
@@ -42,6 +49,7 @@ class ClientItemSalesHistoryMessage(KrunkerMessage):
             'st',
             [item_id, '6']
         )
+
 
 class ServerItemSalesHistoryMessage(KrunkerMessage):
     @property
@@ -70,6 +78,7 @@ class ItemMarketInfo:
             in_circulation=message.in_circulation,
             on_sale=message.on_sale
         )
+
 
 @dataclass
 class ItemSalesDay:

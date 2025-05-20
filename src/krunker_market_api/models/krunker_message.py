@@ -11,7 +11,7 @@ class KrunkerMessage:
             data = []
 
         self.message_type = message_type
-        self.data  = data
+        self.data = data
 
     def __repr__(self) -> str:
         return f'Message(event={self.message_type}, data={self.data})'

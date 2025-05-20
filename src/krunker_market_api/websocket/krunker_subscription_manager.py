@@ -8,13 +8,16 @@ from krunker_market_api.models.krunker_message import KrunkerMessage
 from krunker_market_api.websocket.krunker_websocket import KrunkerWebSocket
 from typing import Type
 
+
 def color(text, code):
     return f"\033[{code}m{text}\033[0m"
+
 
 @dataclass
 class _Subscription:
     matcher: Callable[[KrunkerMessage], bool]
     future: asyncio.Future[KrunkerMessage]
+
 
 T = TypeVar('T', bound='KrunkerMessage')
 
@@ -27,7 +30,6 @@ class KrunkerSubscriptionManager:
     async def ready(self):
         # Wait for the websocket to be ready
         await self._krunker_web_socket.ready()
-
 
     def start(self):
         asyncio.create_task(self._receive_loop())
@@ -56,17 +58,15 @@ class KrunkerSubscriptionManager:
             if sub in self._subscriptions:
                 self._subscriptions.remove(sub)
 
-
     async def send_subscribe(self,
-                              message: KrunkerMessage,
-                              response_matcher: Callable[[KrunkerMessage], bool],
-                              timeout: int = 10,
+                             message: KrunkerMessage,
+                             response_matcher: Callable[[KrunkerMessage], bool],
+                             timeout: int = 10,
                              response_type: Type[T] = KrunkerMessage) -> Optional[T]:
-        subscription = self.subscribe(response_matcher, timeout, response_type=response_type)  # Subscribe just before sending
+        subscription = self.subscribe(response_matcher, timeout,
+                                      response_type=response_type)  # Subscribe just before sending
         await self.send(message)
         return await subscription
-
-
 
     async def _receive_loop(self):
         async with self._krunker_web_socket as ws:

@@ -11,9 +11,9 @@ from krunker_market_api.models.krunker_message import KrunkerMessage
 
 class KrunkerWebSocket:
     def __init__(
-        self,
-        uri: str = "wss://social.krunker.io/ws?",
-        origin: str = "https://krunker.io"
+            self,
+            uri: str = "wss://social.krunker.io/ws?",
+            origin: str = "https://krunker.io"
     ):
         self._uri = uri
         self._origin = origin
@@ -34,7 +34,7 @@ class KrunkerWebSocket:
             self._uri,
             ping_interval=None,
             origin=websockets.Origin(self._origin),
-            
+
         )
         logging.info("Krunker websocket connected")
         self._ws_event.set()

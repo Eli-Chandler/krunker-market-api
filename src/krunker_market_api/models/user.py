@@ -13,12 +13,14 @@ class ClientLoginCaptchaMessage(KrunkerMessage):
             ]
         )
 
+
 class ServerLoginCaptchaMessage(KrunkerMessage):
     @property
     def captcha(self):
         return KrunkerCaptcha(
             **self.data[1]
         )
+
 
 class ClientLoginRequest(KrunkerMessage):
     def __init__(self, email: str, password: str, captcha_solution: str):
