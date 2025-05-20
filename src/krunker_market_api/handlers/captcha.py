@@ -1,8 +1,7 @@
 from krunker_market_api.handlers.protocol import _KrunkerMessageHandler
 from krunker_market_api.models import KrunkerMessage
 from altcha_solver import solve_challenge_async
-from pydantic import BaseModel
-from typing import Callable, Awaitable, Tuple
+from typing import Callable, Awaitable
 import base64
 import json
 import time
@@ -42,6 +41,8 @@ class _CaptchaHandler(_KrunkerMessageHandler):
             "signature": solution.signature,
             "took": solution.took  # Can probably just make this up but for realism we'll use the actual time
         }
+
+        logging.debug(f"Captcha solved: {response_data}")
 
         response_json = json.dumps(response_data, separators=(',', ':'))
         response_b64 = base64.b64encode(response_json.encode()).decode()
