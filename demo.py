@@ -1,9 +1,11 @@
 import asyncio
-from krunker_market_api.websocket.krunker_websocket import KrunkerWebSocket
-import logging
-
 import logging
 import colorlog
+import os
+
+from krunker_market_api.api.krunker_api import KrunkerApi
+
+
 
 def setup_colored_logging():
     handler = colorlog.StreamHandler()
@@ -26,10 +28,16 @@ def setup_colored_logging():
 setup_colored_logging()
 
 async def main():
-    kws = KrunkerWebSocket()
-    await kws.start()
-    await asyncio.sleep(10)
-    await kws.close()
+    email = os.environ["KRUNKER_EMAIL"]
+    password = os.environ["KRUNKER_PASSWORD"]
+
+    k = KrunkerApi()
+    await k.ready()
+    await k.login(email, password)
+
+    while True:
+        await asyncio.sleep(10)
+        print(k.ping())
 
 
 if __name__ == "__main__":
