@@ -53,6 +53,11 @@ class KrunkerApi:
         return listings_response.listings
 
     async def purchase_item_listing(self, listing_id: str) -> None:
+        # Future optimisation:
+        # The listing has a "start time", if we try to buy before it should fail, we should wait for the start time
+        # before purchasing
+        # we can take into account latency and prefire this request a bit
+        # Probably should have a argument for how agressively to do this
         await self._sub.request(PurchaseListingRequest(listing_id))
 
     async def get_item_market_info(self, item_id: int) -> ItemMarketInfo:
