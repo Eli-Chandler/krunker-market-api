@@ -4,7 +4,7 @@ from typing import Optional, List, TypeVar
 from dataclasses import dataclass
 import asyncio
 
-from krunker_market_api.models.krunker_message import KrunkerMessage
+from krunker_market_api.models.krunker_message import KrunkerMessage, KrunkerRequest
 from krunker_market_api.websocket.krunker_websocket import KrunkerWebSocket
 from typing import Type
 
@@ -54,7 +54,6 @@ class KrunkerSubscriptionManager:
                         timeout: Optional[int] = 10,
                         response_type: Type[T] = KrunkerMessage
                         ) -> Optional[T]:
-
         loop = asyncio.get_event_loop()
         future: asyncio.Future[KrunkerMessage] = loop.create_future()
         sub = _Subscription(matcher=response_matcher, future=future)
@@ -78,6 +77,12 @@ class KrunkerSubscriptionManager:
                                       response_type=response_type)  # Subscribe just before sending
         await self.send(message)
         return await subscription
+
+
+    async def request(self,
+                             message: KrunkerRequest[T],
+                             timeout: int = 10) -> Optional[T]:
+        return await self.send_subscribe(message, message.matches, timeout, message.response_type)
 
     async def _receive_loop(self):
         async with self._krunker_web_socket as ws:

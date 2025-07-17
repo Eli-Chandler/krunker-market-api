@@ -31,29 +31,12 @@ class KrunkerApi:
         await self._sub.ready()
 
     async def login(self, email: str, password: str):
-        # krunker auth changed
-        # message = await self._sub.send_subscribe(
-        #     ClientLoginCaptchaMessage(),
-        #     lambda msg: msg.message_type == "_0" and msg.data[0] == 0,
-        #     timeout=10,
-        #     response_type=ServerLoginCaptchaMessage
-        # )
-        #
-        # solution = await solve_captcha(message.captcha)
-        #
-        # await self._sub.send_subscribe(
-        #     ClientLoginRequest(email, password, solution),
-        #     lambda msg: msg.message_type == "a" and msg.data[0] == 0,
-        #     timeout=10
-        # )
-
         krunker_credentials = await _krunker_http_login(email, password)
+        # It gives a separate response message that is true/false, subscribe ahead of time
         login_result_message_task = asyncio.create_task(self._sub.subscribe(lambda msg: msg.message_type == "_0", 10, ServerLoginResultMessage))
-        await self._sub.send_subscribe(
-            ClientLoginRequest(krunker_credentials.access_token),
-            lambda msg: msg.message_type == "a" and msg.data[0] == 0,
-            timeout=10
-        )
+
+        await self._sub.request(
+            LoginRequest(krunker_credentials.access_token))
 
         login_result_message = await login_result_message_task
         if not login_result_message.success:
@@ -61,23 +44,12 @@ class KrunkerApi:
 
 
     async def get_item_market_info(self, item_id: int) -> ItemMarketInfo:
-        result = await self._sub.send_subscribe(
-            ClientItemMarketInfoMessage(item_id),
-            lambda msg: msg.message_type == '0' and msg.data[0] == 'itemsales' and msg.data[1] == 'market',
-            timeout=10,
-            response_type=ServerItemMarketInfoMessage
-        )
+        result = await self._sub.request(MarketInfoRequest(item_id))
 
         return ItemMarketInfo.from_krunker_message(result)
 
     async def get_item_sales_history(self, item_id: int) -> List[ItemSalesDay]:
-        result = await self._sub.send_subscribe(
-            ClientItemSalesHistoryMessage(item_id),
-            lambda msg: msg.message_type == 'gd' and msg.data[1] == item_id,
-            timeout=15,
-            response_type=ServerItemSalesHistoryMessage
-        )
-
+        result = await self._sub.request(ItemSalesHistoryRequest(item_id), timeout=15)
         return ItemSalesDay.from_krunker_message(result)
 
     def ping(self) -> float:
@@ -96,12 +68,7 @@ class KrunkerApi:
 
             solution = await solve_captcha(message.captcha)
 
-            captcha_result = await self._sub.send_subscribe(
-                ClientCaptchaSolutionMessage(solution),
-                lambda msg: msg.message_type == 'cptR',
-                timeout=10,
-                response_type=ServerCaptchaResultMessage
-            )
+            captcha_result = await self._sub.request(CaptchaSolutionRequest(solution))
 
             if not captcha_result.success:
                 raise RuntimeError("Captcha solution failed")

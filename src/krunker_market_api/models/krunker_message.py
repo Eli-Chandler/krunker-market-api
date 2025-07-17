@@ -1,5 +1,6 @@
-from typing import List
+from typing import List, TypeVar, Generic
 import msgpack
+from abc import ABC, abstractmethod
 
 
 class KrunkerMessage:
@@ -34,3 +35,16 @@ class KrunkerMessage:
     def to_bytes(self) -> bytes:
         encoded_message = msgpack.packb([self.message_type] + self.data) + b'\x00\x00'
         return encoded_message
+
+
+T = TypeVar("T", bound=KrunkerMessage)
+
+class KrunkerRequest(ABC, KrunkerMessage, Generic[T]):
+    @abstractmethod
+    def matches(self, message: KrunkerMessage) -> bool:
+        pass
+
+    @property
+    @abstractmethod
+    def response_type(self) -> type[T]:
+        pass

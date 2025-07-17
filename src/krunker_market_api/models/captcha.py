@@ -6,7 +6,7 @@ import time
 from altcha_solver import solve_challenge_async
 from pydantic import BaseModel
 
-from krunker_market_api.models.krunker_message import KrunkerMessage
+from krunker_market_api.models.krunker_message import KrunkerMessage, KrunkerRequest, T
 
 
 class ServerCaptchaMessage(KrunkerMessage):
@@ -15,12 +15,19 @@ class ServerCaptchaMessage(KrunkerMessage):
         return KrunkerCaptcha(**self.data[0])
 
 
-class ClientCaptchaSolutionMessage(KrunkerMessage):
+class CaptchaSolutionRequest(KrunkerRequest["CaptchaSolutionResponse"]):
     def __init__(self, solution: str):
         super().__init__('cptR', [solution])
 
+    def matches(self, message: "KrunkerMessage") -> bool:
+        return message.message_type == 'cptR'
 
-class ServerCaptchaResultMessage(KrunkerMessage):
+    @property
+    def response_type(self):
+        return CaptchaSolutionResponse
+
+
+class CaptchaSolutionResponse(KrunkerMessage):
     @property
     def success(self) -> bool:
         return self.data[0]

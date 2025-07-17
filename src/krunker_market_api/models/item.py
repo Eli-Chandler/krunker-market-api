@@ -1,11 +1,11 @@
 from datetime import datetime
 from typing import List
 
-from krunker_market_api.models.krunker_message import KrunkerMessage
+from krunker_market_api.models.krunker_message import KrunkerMessage, KrunkerRequest, T
 from dataclasses import dataclass
 
 
-class ClientItemMarketInfoMessage(KrunkerMessage):
+class MarketInfoRequest(KrunkerRequest["ServerItemMarketInfoMessage"]):
     def __init__(self, item_id: int):
         super().__init__(
             'r',
@@ -19,6 +19,13 @@ class ClientItemMarketInfoMessage(KrunkerMessage):
                 item_id
             ]
         )
+
+    def matches(self, message: "KrunkerMessage") -> bool:
+        return message.message_type == '0' and len(message.data) >= 2 and message.data[0] == 'itemsales' and message.data[1] == 'market'
+
+    @property
+    def response_type(self):
+        return ServerItemMarketInfoMessage
 
 
 class ServerItemMarketInfoMessage(KrunkerMessage):
@@ -43,12 +50,21 @@ class ServerItemMarketInfoMessage(KrunkerMessage):
         return self.data[2]['onS']
 
 
-class ClientItemSalesHistoryMessage(KrunkerMessage):
+class ItemSalesHistoryRequest(KrunkerRequest["ServerItemSalesHistoryMessage"]):
     def __init__(self, item_id: int):
+        self._item_id = item_id
+
         super().__init__(
             'st',
             [item_id, '6']
         )
+
+    def matches(self, message: "KrunkerMessage") -> bool:
+        return message.message_type == 'gd' and len(message.data) >= 1 and message.data[1] == self._item_id
+
+    @property
+    def response_type(self) -> type[T]:
+        return ServerItemSalesHistoryMessage
 
 
 class ServerItemSalesHistoryMessage(KrunkerMessage):
