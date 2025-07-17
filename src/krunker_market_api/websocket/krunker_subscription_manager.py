@@ -21,6 +21,17 @@ class _Subscription:
 
 T = TypeVar('T', bound='KrunkerMessage')
 
+def _log_send_message(message: KrunkerMessage):
+    if message.message_type != 'po':
+        logging.info(color(f"[->] {message}", '35'))
+    else:
+        logging.debug(color(f"[->] {message}", '35'))
+
+def _log_receieve_message(message: KrunkerMessage):
+    if message.message_type not in ["pi"]:
+        logging.info(color(f"[<-]: {message}", '34'))
+    else:
+        logging.debug(color(f"[<-]: {message}", '34'))
 
 class KrunkerSubscriptionManager:
     def __init__(self, krunker_web_socket: KrunkerWebSocket):
@@ -35,7 +46,7 @@ class KrunkerSubscriptionManager:
         asyncio.create_task(self._receive_loop())
 
     async def send(self, message: KrunkerMessage):
-        logging.info(color(f"[->] {message}", '35'))
+        _log_send_message(message)
         await self._krunker_web_socket.send(message)
 
     async def subscribe(self,
@@ -82,4 +93,4 @@ class KrunkerSubscriptionManager:
                 if not handled:
                     logging.warning(f"Received message without matching subscription: {msg}")
                 else:
-                    logging.info(color(f"[<-]: {msg}", '34'))
+                    _log_receieve_message(msg)

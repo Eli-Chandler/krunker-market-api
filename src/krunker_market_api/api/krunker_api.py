@@ -8,6 +8,10 @@ from krunker_market_api.models.user import *
 from krunker_market_api.models.item import *
 from krunker_market_api.models.ping import *
 
+import aiohttp
+
+from dataclasses import dataclass
+
 
 class KrunkerApi:
     def __init__(self):
@@ -27,20 +31,34 @@ class KrunkerApi:
         await self._sub.ready()
 
     async def login(self, email: str, password: str):
-        message = await self._sub.send_subscribe(
-            ClientLoginCaptchaMessage(),
-            lambda msg: msg.message_type == "_0" and msg.data[0] == 0,
-            timeout=10,
-            response_type=ServerLoginCaptchaMessage
-        )
+        # krunker auth changed
+        # message = await self._sub.send_subscribe(
+        #     ClientLoginCaptchaMessage(),
+        #     lambda msg: msg.message_type == "_0" and msg.data[0] == 0,
+        #     timeout=10,
+        #     response_type=ServerLoginCaptchaMessage
+        # )
+        #
+        # solution = await solve_captcha(message.captcha)
+        #
+        # await self._sub.send_subscribe(
+        #     ClientLoginRequest(email, password, solution),
+        #     lambda msg: msg.message_type == "a" and msg.data[0] == 0,
+        #     timeout=10
+        # )
 
-        solution = await solve_captcha(message.captcha)
-
+        krunker_credentials = await _krunker_http_login(email, password)
+        login_result_message_task = asyncio.create_task(self._sub.subscribe(lambda msg: msg.message_type == "_0", 10, ServerLoginResultMessage))
         await self._sub.send_subscribe(
-            ClientLoginRequest(email, password, solution),
+            ClientLoginRequest(krunker_credentials.access_token),
             lambda msg: msg.message_type == "a" and msg.data[0] == 0,
             timeout=10
         )
+
+        login_result_message = await login_result_message_task
+        if not login_result_message.success:
+            raise RuntimeError("Login failed")
+
 
     async def get_item_market_info(self, item_id: int) -> ItemMarketInfo:
         result = await self._sub.send_subscribe(
@@ -132,3 +150,45 @@ class KrunkerApi:
             handle_regular_ping(),
             handle_latency_ping()
         )
+
+
+@dataclass(frozen=True)
+class KrunkerLoginResult:
+    access_token: str
+    login_token: str
+    refresh_token: str
+
+async def _krunker_http_login(user: str, password: str):
+    headers = {
+        'accept': 'application/json',
+        'accept-language': 'en-US,en;q=0.9',
+        'content-type': 'application/json',
+        'origin': 'https://krunker.io',
+        'priority': 'u=1, i',
+        'referer': 'https://krunker.io/',
+        'sec-ch-ua': '"Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Linux"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-site',
+        'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
+    }
+
+    json_data = {
+        'email': user,
+        'password': password,
+    }
+
+    async with aiohttp.ClientSession() as session:
+        response = await session.post('https://gapi.svc.krunker.io/auth/login/email', headers=headers, json=json_data)
+        if response.status != 200:
+            raise RuntimeError(f"Login failed, status code: {response.status} {await response.text()}")
+
+        j = await response.json()
+
+    return KrunkerLoginResult(
+        access_token=j['data']['access_token'],
+        login_token=j['data']['login_token'],
+        refresh_token=j['data']['refresh_token'],
+    )
