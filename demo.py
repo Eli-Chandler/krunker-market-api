@@ -4,6 +4,9 @@ import colorlog
 import os
 
 from krunker_market_api.api.krunker_api import KrunkerApi
+import time
+
+
 
 
 def setup_colored_logging():
@@ -35,6 +38,9 @@ async def main():
     k = KrunkerApi()
     await k.ready()
     await k.login(email, password)
+    listings = await k.get_item_listings("3241")
+    listing_id = listings[0].listing_id
+    await k.purchase_item_listing(listing_id)
 
     while True:
         await asyncio.sleep(10)

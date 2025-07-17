@@ -1,5 +1,6 @@
 import asyncio
 from collections import deque
+from typing import Optional
 
 from krunker_market_api.websocket.krunker_subscription_manager import KrunkerSubscriptionManager
 from krunker_market_api.websocket.krunker_websocket import KrunkerWebSocket
@@ -26,6 +27,7 @@ class KrunkerApi:
 
         # Start the websocket
         self._sub.start()
+        self.logged_in_details: Optional[LoggedInDetails] = None
 
     async def ready(self):
         await self._sub.ready()
@@ -33,15 +35,25 @@ class KrunkerApi:
     async def login(self, email: str, password: str):
         krunker_credentials = await _krunker_http_login(email, password)
         # It gives a separate response message that is true/false, subscribe ahead of time
-        login_result_message_task = asyncio.create_task(self._sub.subscribe(lambda msg: msg.message_type == "_0", 10, ServerLoginResultMessage))
+        login_result_message_task = asyncio.create_task(self._sub.subscribe(lambda msg: msg.message_type == "_0", 10, LoginResultResponse))
 
-        await self._sub.request(
+        login_response = await self._sub.request(
             LoginRequest(krunker_credentials.access_token))
+
+        self.logged_in_details = LoggedInDetails.from_message(login_response)
 
         login_result_message = await login_result_message_task
         if not login_result_message.success:
             raise RuntimeError("Login failed")
 
+    async def get_item_listings(self, item_id: str) -> list[KrunkerItemListing]:
+        if self.logged_in_details is None:
+            raise ValueError("Must be logged in")
+        listings_response = await self._sub.request(ItemListingsRequest(item_id, self.logged_in_details))
+        return listings_response.listings
+
+    async def purchase_item_listing(self, listing_id: str) -> None:
+        await self._sub.request(PurchaseListingRequest(listing_id))
 
     async def get_item_market_info(self, item_id: int) -> ItemMarketInfo:
         result = await self._sub.request(MarketInfoRequest(item_id))

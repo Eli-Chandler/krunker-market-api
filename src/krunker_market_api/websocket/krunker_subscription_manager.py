@@ -73,8 +73,8 @@ class KrunkerSubscriptionManager:
                              response_matcher: Callable[[KrunkerMessage], bool],
                              timeout: int = 10,
                              response_type: Type[T] = KrunkerMessage) -> Optional[T]:
-        subscription = self.subscribe(response_matcher, timeout,
-                                      response_type=response_type)  # Subscribe just before sending
+        subscription = asyncio.create_task(self.subscribe(response_matcher, timeout,
+                                      response_type=response_type))  # Subscribe just before sending
         await self.send(message)
         return await subscription
 
@@ -89,13 +89,18 @@ class KrunkerSubscriptionManager:
             async for msg in ws:
                 # dispatch to all subscriptions
                 handled = False
-                for sub in list(self._subscriptions):
+                for sub in self._subscriptions:
                     if not sub.future.done() and sub.matcher(msg):
                         handled = True
                         sub.future.set_result(msg)
                         self._subscriptions.remove(sub)
 
+                        # Actually we can just return here
+                        # I found out that websocket messages have guaranteed order
+                        # So we should just give it to the earliest subscriber
+                        # Anyways, it would probably be a bad idea to match the same message to multiple subscriptions
+                        _log_receieve_message(msg)
+                        break
+
                 if not handled:
                     logging.warning(f"Received message without matching subscription: {msg}")
-                else:
-                    _log_receieve_message(msg)

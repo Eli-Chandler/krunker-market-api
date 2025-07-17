@@ -1,5 +1,7 @@
 from krunker_market_api.models.captcha import KrunkerCaptcha
-from krunker_market_api.models.krunker_message import KrunkerMessage, KrunkerRequest, T
+from krunker_market_api.models.krunker_message import KrunkerMessage, KrunkerRequest
+
+from dataclasses import dataclass
 
 
 class ClientLoginCaptchaMessage(KrunkerMessage):
@@ -41,7 +43,7 @@ class ServerLoginCaptchaMessage(KrunkerMessage):
 #     "eJ..."
 # ]
 
-class LoginRequest(KrunkerRequest):
+class LoginRequest(KrunkerRequest["LoginResponse"]):
     def __init__(self, login_token: str):
         super().__init__(
             message_type="_0",
@@ -54,11 +56,29 @@ class LoginRequest(KrunkerRequest):
         return message.message_type == "a" and len(message.data) >= 1 and message.data[0] == 0
 
     @property
-    def response_type(self) -> type[None]:
-        return None
+    def response_type(self) -> type["LoginResponse"]:
+        return LoginResponse
+
+class LoginResponse(KrunkerMessage):
+    @property
+    def id(self) -> int:
+        return self.data[1]
+
+    @property
+    def username(self) -> str:
+        return self.data[2]
 
 
-class ServerLoginResultMessage(KrunkerMessage):
+@dataclass(frozen=True)
+class LoggedInDetails:
+    username: str
+    id: int
+
+    @classmethod
+    def from_message(cls, message: "LoginResponse") -> "LoggedInDetails":
+        return cls(message.username, message.id)
+
+class LoginResultResponse(KrunkerMessage):
     @property
     def success(self) -> bool:
         return self.data[1]
